@@ -48,7 +48,7 @@ int main(int argc, char* argv[])
         PrintHelp();
         return EXIT_FAILURE;
     }
-	argvOption = argv[1] ;
+	argvOption = argv[1];
     argvI2cAddress = argv[2];
 
     // parse option
