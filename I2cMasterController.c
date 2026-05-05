@@ -349,12 +349,11 @@ bool IsReadBytesDecimal(char* argvReadBytes)
         buffer = *(argvReadBytes + index); 
         if(!((buffer >= '0') && (buffer <= '9')))
         {
-            return returnState;
+            return false;
         }
     }
     // validated all payload values are hexadecimal
-    returnState = true;
-    return returnState;
+    return true;
 }
 
 void GetPayload(char* argPayload, size_t argPayloadLength, unsigned char* payload)
