@@ -281,11 +281,15 @@ I2C_OPERATION ParseOption(char* argvOption)
 
 bool IsI2cAddressValid(char* argvI2cAddress)
 {
+    char *endptr = NULL;
+    long address = 0;
+
     if (argvI2cAddress == NULL)
     {
         return false;
     }
 
+    // I2C address shall be 7-bit hexadecimal, so the length shall be 2
     if (strlen(argvI2cAddress) != 2)
     {
         return false;
@@ -296,14 +300,14 @@ bool IsI2cAddressValid(char* argvI2cAddress)
         return false;
     }
 
-    char *endptr = NULL;
-    long val = strtol(argvI2cAddress, &endptr, 16);
+    address = strtol(argvI2cAddress, &endptr, 16);
     if (endptr == argvI2cAddress || *endptr != '\0')
     {
         return false;
     }
 
-    if (val < 0 || val > 0x7F)
+    // I2C address shall be range between 0x00 and 0x7f
+    if (address < 0x00 || address > 0x7f)
     {
         return false;
     }
@@ -313,20 +317,23 @@ bool IsI2cAddressValid(char* argvI2cAddress)
 
 bool IsPayloadHexadecimal(char* argvPayload)
 {
+    size_t argPayloadLength = 0;
+    size_t index = 0;
+
     if (argvPayload == NULL)
     {
         return false;
     }
 
-    size_t argPayloadLength = strlen(argvPayload);
+    argPayloadLength = strlen(argvPayload);
 
-    /* payload must be non-empty and have even length */
+    // payload must be non-empty and have even length
     if (argPayloadLength == 0 || (argPayloadLength % 2) != 0)
     {
         return false;
     }
 
-    for (size_t index = 0; index < argPayloadLength; ++index)
+    for (index = 0; index < argPayloadLength; ++index)
     {
         if (!isxdigit((unsigned char)argvPayload[index]))
         {
@@ -339,20 +346,27 @@ bool IsPayloadHexadecimal(char* argvPayload)
 
 bool IsReadBytesDecimal(char* argvReadBytes)
 {
-    bool returnState = false;
-    size_t length = strlen(argvReadBytes);
-    size_t index = 0;
-    char buffer;
-
-    for(index = 0; index < length; index++)
+    if (argvReadBytes == NULL)
     {
-        buffer = *(argvReadBytes + index); 
-        if(!((buffer >= '0') && (buffer <= '9')))
+        return false;
+    }
+
+    size_t index = 0;
+    size_t length = strlen(argvReadBytes);
+
+    if (length == 0)
+    {
+        return false;
+    }
+
+    for (index = 0; index < length; ++index)
+    {
+        if (!isdigit((unsigned char)argvReadBytes[index]))
         {
             return false;
         }
     }
-    // validated all payload values are hexadecimal
+
     return true;
 }
 
