@@ -14,12 +14,14 @@
 
 void PrintHelp();
 I2C_OPERATION ParseOption(char* argvOption);
+void CleanHeap(unsigned char* payload, unsigned char* readBuffer);
+
 bool IsI2cAddressValid(char* argvI2cAddress);
 bool IsPayloadHexadecimal(char* argvPayload);
 bool IsReadBytesDecimal(char* argvReadBytes);
 void GetPayload(char* argPayload, size_t argPayloadLength, unsigned char* payload);
 void PrintPayload(unsigned char writeBytes, unsigned char* payload);
-void CleanHeap(unsigned char* payload, unsigned char* readBuffer);
+void PrintReadBuffer(unsigned char readBytes, unsigned char* payload);
 
 int main(int argc, char* argv[])
 {
@@ -171,16 +173,17 @@ int main(int argc, char* argv[])
         }
     }
 
+    // set I2C transporter operation information
+    i2cCommand.Address = (unsigned int)i2cAddress;
+    i2cCommand.Operation = i2cOperation;
+    i2cCommand.ReadBuffer = readBuffer;
+    i2cCommand.ReadBytes = (unsigned int)readBytes;
+    i2cCommand.WriteBuffer = payload;
+    i2cCommand.WriteBytes = (unsigned int)writeBytes;
+
     // transmit I2C packet
     if (OpenI2cDevice())
     {    
-        i2cCommand.Address = (unsigned int)i2cAddress;
-        i2cCommand.Operation = i2cOperation;
-        i2cCommand.ReadBuffer = readBuffer;
-        i2cCommand.ReadBytes = (unsigned int)readBytes;
-        i2cCommand.WriteBuffer = payload;
-        i2cCommand.WriteBytes = (unsigned int)writeBytes;
-
 #ifdef _DEBUG
         printf("Address: %2x\n", i2cAddress);
         printf("I2c Operation: %d\n", i2cOperation);
@@ -188,12 +191,7 @@ int main(int argc, char* argv[])
         printf("Write size: %d byte\n", writeBytes);
         if(writeBytes > 0)
         {
-            printf("write payload: ");
-            for( index = 0; index < writeBytes; index++)
-            {
-                printf("0x%2x, ", payload[index]);
-            }
-            printf("\n");
+            PrintReadBuffer(readBytes, readBuffer);
         }
 #endif
         
@@ -369,6 +367,7 @@ void GetPayload(char* argPayload, size_t argPayloadLength, unsigned char* payloa
         sscanf(argPayload + index, "%2hhx", &payload[index / 2]);
     }
 }
+
 void PrintPayload(unsigned char writeBytes, unsigned char* payload)
 {
     size_t index = 0;
@@ -381,3 +380,14 @@ void PrintPayload(unsigned char writeBytes, unsigned char* payload)
     printf("\n");
 }
 
+void PrintReadBuffer(unsigned char readBytes, unsigned char* payload)
+{
+    size_t index = 0;
+
+    printf("read buffer: ");
+    for(index = 0; index < readBytes; index++)
+    {
+        printf("0x%2x, ", payload[index]);
+    }
+    printf("\n");
+}
