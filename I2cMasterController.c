@@ -241,9 +241,7 @@ void PrintHelp()
     printf("   set slave address 7'h6c with R/W! = 0\n");
     printf("I2cMasterController -w 6c 0a1b\n");
     printf("   write 0x0a1b to slave device 7'h6c\n");
-    printf("I2cMasterController -r 6c 0\n");
-    printf("   set slave address 7'h6c with R/W! = 1\n");
-    printf("I2cMasterController -w 6c 7\n");
+    printf("I2cMasterController -r 6c 7\n");
     printf("   read 7 bytes from slave address 7'h6c\n");
     printf("I2cMasterController -wr 6c 0a1b 7\n");
     printf("   read 7 bytes from slave address 7'h6c, after writting 0a1b followed by repeated start\n");
