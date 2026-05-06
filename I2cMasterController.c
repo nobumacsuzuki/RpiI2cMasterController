@@ -23,36 +23,22 @@ void GetPayload(char* argPayload, size_t argPayloadLength, unsigned char* payloa
 void PrintPayload(unsigned char writeBytes, unsigned char* payload);
 void PrintReadBuffer(unsigned char readBytes, unsigned char* payload);
 
+void PrintArray(char* msg, unsigned char bytes, unsigned char* buffer);
+
 int main(int argc, char* argv[])
 {
-	char* argvOption = NULL;
-    char* argvI2cAddress = NULL;
-    char* argPayload = NULL;
-    char* argvReadBytes = NULL;
-
-    I2C_OPERATION i2cOperation = 0;
-    unsigned char i2cAddress = 0;
-    size_t argPayloadLength = 0;
-
-    I2C_OPERATION_INFO i2cCommand = {0};
-    unsigned char writeBytes = 0;
-    unsigned char* payload = NULL;
-    unsigned char readBytes = 0;
-    unsigned char* readBuffer = NULL;
-
-    size_t index;
-
     // argc shall be min 3, function name, option and I2C slave address
     if (argc < 3)
     {
         PrintHelp();
         return EXIT_FAILURE;
     }
-	argvOption = argv[1];
-    argvI2cAddress = argv[2];
+	char* argvOption = argv[1];
+    char*argvI2cAddress = argv[2];
 
     // parse option
-    i2cOperation = ParseOption(argvOption);
+    I2C_OPERATION i2cOperation = ParseOption(argvOption);
+
     if(i2cOperation == I2C_OPERATION_INVALID)
     {
         printf("ERROR: wrong option, %s\n", argvOption);
@@ -61,6 +47,8 @@ int main(int argc, char* argv[])
     }
     
     // check I2C address sanity
+    unsigned char i2cAddress = 0;
+
     if(IsI2cAddressValid(argvI2cAddress))
     {
         i2cAddress = (unsigned char) strtol(argvI2cAddress, NULL, 16);        
@@ -76,6 +64,11 @@ int main(int argc, char* argv[])
     printf("address: 7'h%2x\n", i2cAddress);
 
     // set write payload
+    unsigned char writeBytes = 0;
+    unsigned char* payload = NULL;
+    char* argPayload = NULL;
+    size_t argPayloadLength = 0;
+
     if ((i2cOperation == I2C_OPERATION_WRITE) || (i2cOperation == I2C_OPERATION_READ_AFTER_WRITE))
     {
         if((i2cOperation == I2C_OPERATION_WRITE) && (argc == 3))
@@ -100,7 +93,7 @@ int main(int argc, char* argv[])
                     return EXIT_FAILURE;
                 }
                 GetPayload(argPayload, argPayloadLength, payload);
-                PrintPayload(writeBytes, payload);
+                PrintArray("Write Payload", writeBytes, payload);
             }
             else
             {
@@ -120,6 +113,10 @@ int main(int argc, char* argv[])
     }
 
     // set read buffer
+    unsigned char readBytes = 0;
+    unsigned char* readBuffer = NULL;
+    char* argvReadBytes = NULL;
+
     if ((i2cOperation == I2C_OPERATION_WRITE))
     {
         // set read buffer empty
@@ -174,6 +171,7 @@ int main(int argc, char* argv[])
     }
 
     // set I2C transporter operation information
+    I2C_OPERATION_INFO i2cCommand = {0};
     i2cCommand.Address = (unsigned int)i2cAddress;
     i2cCommand.Operation = i2cOperation;
     i2cCommand.ReadBuffer = readBuffer;
@@ -191,7 +189,7 @@ int main(int argc, char* argv[])
         printf("Write size: %d byte\n", writeBytes);
         if(writeBytes > 0)
         {
-            PrintReadBuffer(readBytes, readBuffer);
+            PrintArray("Write Payload", writeBytes, payload);
         }
 #endif
         
@@ -201,12 +199,7 @@ int main(int argc, char* argv[])
     
         if ((i2cOperation == I2C_OPERATION_READ) || (i2cOperation == I2C_OPERATION_READ_AFTER_WRITE))
         {
-            printf("read bytes: ");
-            for(index = 0; index < readBytes; index++)
-            {
-                printf("0x%2x, ", readBuffer[index]);
-            }
-            printf("\n");
+            PrintArray("Read Buffer", readBytes, readBuffer);
         }
     }
 
@@ -281,8 +274,6 @@ I2C_OPERATION ParseOption(char* argvOption)
 
 bool IsI2cAddressValid(char* argvI2cAddress)
 {
-    char *endptr = NULL;
-    long address = 0;
 
     if (argvI2cAddress == NULL)
     {
@@ -300,11 +291,7 @@ bool IsI2cAddressValid(char* argvI2cAddress)
         return false;
     }
 
-    address = strtol(argvI2cAddress, &endptr, 16);
-    if (endptr == argvI2cAddress || *endptr != '\0')
-    {
-        return false;
-    }
+    long address = strtol(argvI2cAddress, &endptr, 16);
 
     // I2C address shall be range between 0x00 and 0x7f
     if (address < 0x00 || address > 0x7f)
@@ -317,15 +304,12 @@ bool IsI2cAddressValid(char* argvI2cAddress)
 
 bool IsPayloadHexadecimal(char* argvPayload)
 {
-    size_t argPayloadLength = 0;
-    size_t index = 0;
-
     if (argvPayload == NULL)
     {
         return false;
     }
 
-    argPayloadLength = strlen(argvPayload);
+    size_t argPayloadLength = strlen(argvPayload);
 
     // payload must be non-empty and have even length
     if (argPayloadLength == 0 || (argPayloadLength % 2) != 0)
@@ -333,7 +317,7 @@ bool IsPayloadHexadecimal(char* argvPayload)
         return false;
     }
 
-    for (index = 0; index < argPayloadLength; ++index)
+    for (size_t index = 0; index < argPayloadLength; ++index)
     {
         if (!isxdigit((unsigned char)argvPayload[index]))
         {
@@ -351,7 +335,6 @@ bool IsReadBytesDecimal(char* argvReadBytes)
         return false;
     }
 
-    size_t index = 0;
     size_t length = strlen(argvReadBytes);
 
     if (length == 0)
@@ -359,7 +342,7 @@ bool IsReadBytesDecimal(char* argvReadBytes)
         return false;
     }
 
-    for (index = 0; index < length; ++index)
+    for (size_t index = 0; index < length; ++index)
     {
         if (!isdigit((unsigned char)argvReadBytes[index]))
         {
@@ -372,35 +355,19 @@ bool IsReadBytesDecimal(char* argvReadBytes)
 
 void GetPayload(char* argPayload, size_t argPayloadLength, unsigned char* payload)
 {
-    size_t index;
-
-    for (index = 0; index < argPayloadLength; index += 2)
+    for (size_t index = 0; index < argPayloadLength; index += 2)
     {
         /* write directly into payload byte (C99 "%2hhx") */
         sscanf(argPayload + index, "%2hhx", &payload[index / 2]);
     }
 }
 
-void PrintPayload(unsigned char writeBytes, unsigned char* payload)
+void PrintArray(char* msg, unsigned char bytes, unsigned char* buffer)
 {
-    size_t index = 0;
-
-    printf("write payload: ");
-    for(index = 0; index < writeBytes; index++)
+    printf("%s :", msg);
+    for(size_t index = 0; index < bytes; index++)
     {
-        printf("0x%2x, ", payload[index]);
-    }
-    printf("\n");
-}
-
-void PrintReadBuffer(unsigned char readBytes, unsigned char* payload)
-{
-    size_t index = 0;
-
-    printf("read buffer: ");
-    for(index = 0; index < readBytes; index++)
-    {
-        printf("0x%2x, ", payload[index]);
+        printf("0x%2x, ", buffer[index]);
     }
     printf("\n");
 }
