@@ -291,7 +291,7 @@ bool IsI2cAddressValid(char* argvI2cAddress)
         return false;
     }
 
-    long address = strtol(argvI2cAddress, &endptr, 16);
+    long address = strtol(argvI2cAddress, NULL, 16);
 
     // I2C address shall be range between 0x00 and 0x7f
     if (address < 0x00 || address > 0x7f)
