@@ -13,16 +13,13 @@
 // function prototype
 
 void PrintHelp();
+
 I2C_OPERATION ParseOption(char* argvOption);
 void CleanHeap(unsigned char* payload, unsigned char* readBuffer);
-
 bool IsI2cAddressValid(char* argvI2cAddress);
 bool IsPayloadHexadecimal(char* argvPayload);
 bool IsReadBytesDecimal(char* argvReadBytes);
 void GetPayload(char* argPayload, size_t argPayloadLength, unsigned char* payload);
-void PrintPayload(unsigned char writeBytes, unsigned char* payload);
-void PrintReadBuffer(unsigned char readBytes, unsigned char* payload);
-
 void PrintArray(char* msg, unsigned char bytes, unsigned char* buffer);
 
 int main(int argc, char* argv[])
